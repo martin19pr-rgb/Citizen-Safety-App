@@ -3,11 +3,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-export const SOSButton = () => {
+interface SOSButtonProps {
+  listening?: boolean;
+}
+
+export const SOSButton = ({ listening = false }: SOSButtonProps) => {
   const [isHolding, setIsHolding] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'dispatched' | 'cancelled'>('idle');
@@ -15,7 +19,7 @@ export const SOSButton = () => {
   const progressRef = useRef<number>(0);
   const { toast } = useToast();
 
-  const HOLD_DURATION = 5000;
+  const HOLD_DURATION = 3000; // Reduced to 3s for faster emergency access
 
   useEffect(() => {
     if (isHolding && status === 'idle') {
@@ -27,7 +31,7 @@ export const SOSButton = () => {
         progressRef.current = newProgress;
 
         if (newProgress === 100) {
-          handleDispatch();
+          handleDispatch('General SOS');
         }
       }, 50);
     } else {
@@ -43,19 +47,19 @@ export const SOSButton = () => {
     };
   }, [isHolding]);
 
-  const handleDispatch = () => {
+  const handleDispatch = (type: string) => {
     setIsHolding(false);
     setStatus('dispatched');
     if (timerRef.current) clearInterval(timerRef.current);
     
     toast({
-      title: "HELP DISPATCHED",
-      description: "Responders are en route to your location. Stay calm.",
+      title: `${type.toUpperCase()} DISPATCHED`,
+      description: "Responders are en route. Family and emergency contacts have been notified.",
     });
 
     setTimeout(() => {
       setStatus('idle');
-    }, 10000);
+    }, 15000);
   };
 
   const handleCancel = () => {
@@ -89,7 +93,7 @@ export const SOSButton = () => {
             strokeLinecap="round"
             className={cn(
               "transition-colors duration-300",
-              progress < 100 ? "text-accent" : "text-primary"
+              progress < 100 ? "text-destructive" : "text-primary"
             )}
           />
         </svg>
@@ -101,15 +105,27 @@ export const SOSButton = () => {
           onMouseLeave={() => setIsHolding(false)}
           onTouchStart={() => setIsHolding(true)}
           onTouchEnd={() => setIsHolding(false)}
-          animate={status === 'idle' ? { scale: isHolding ? 0.95 : 1 } : {}}
+          animate={status === 'idle' ? { 
+            scale: isHolding ? 0.95 : 1,
+            boxShadow: listening ? "0 0 50px rgba(255, 255, 255, 0.4)" : ""
+          } : {}}
           className={cn(
             "relative w-52 h-52 rounded-full glass-card flex flex-col items-center justify-center gap-2 transition-all duration-500",
-            status === 'idle' && !isHolding && "breathing-glow border-primary/40",
-            isHolding && "ring-4 ring-accent glow-accent",
-            status === 'dispatched' && "ring-4 ring-primary glow-green",
+            status === 'idle' && !isHolding && "border-destructive/40 bg-destructive/10",
+            isHolding && "ring-4 ring-destructive glow-accent bg-destructive/30",
+            status === 'dispatched' && "ring-4 ring-primary glow-green bg-primary/20",
             status === 'cancelled' && "ring-4 ring-destructive"
           )}
         >
+          {/* Ghost Light for Voice Activation */}
+          {listening && status === 'idle' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              className="absolute inset-0 rounded-full bg-white blur-2xl animate-pulse"
+            />
+          )}
+
           <AnimatePresence mode="wait">
             {status === 'idle' && (
               <motion.div
@@ -117,12 +133,16 @@ export const SOSButton = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center z-10"
               >
-                <ShieldAlert className={cn("w-16 h-16 mb-2 transition-colors", isHolding ? "text-accent" : "text-primary")} />
-                <span className="font-headline text-3xl font-bold tracking-tighter">SOS</span>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
-                  {isHolding ? "HOLDING..." : "PRESS & HOLD"}
+                {listening ? (
+                  <Mic className="w-16 h-16 mb-2 text-white animate-pulse" />
+                ) : (
+                  <ShieldAlert className={cn("w-16 h-16 mb-2 transition-colors", isHolding ? "text-white" : "text-destructive")} />
+                )}
+                <span className="font-headline text-3xl font-bold tracking-tighter text-white">SOS</span>
+                <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">
+                  {isHolding ? "HOLDING..." : listening ? "LISTENING..." : "PRESS & HOLD"}
                 </span>
               </motion.div>
             )}
@@ -132,10 +152,10 @@ export const SOSButton = () => {
                 key="dispatched"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="flex flex-col items-center text-primary"
+                className="flex flex-col items-center text-primary z-10"
               >
                 <CheckCircle2 className="w-20 h-20 mb-2" />
-                <span className="font-headline text-xl font-bold">HELP EN ROUTE</span>
+                <span className="font-headline text-xl font-bold uppercase">Help Received</span>
               </motion.div>
             )}
 
@@ -144,7 +164,7 @@ export const SOSButton = () => {
                 key="cancelled"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="flex flex-col items-center text-destructive"
+                className="flex flex-col items-center text-destructive z-10"
               >
                 <XCircle className="w-20 h-20 mb-2" />
                 <span className="font-headline text-xl font-bold">CANCELLED</span>
@@ -155,15 +175,15 @@ export const SOSButton = () => {
       </div>
 
       <div className="text-center">
-        <p className="text-primary font-medium tracking-wide flex items-center gap-2">
+        <p className="text-primary font-medium tracking-wide flex items-center justify-center gap-2">
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
           </span>
-          Guardian Active • You Are Protected
+          Guardian Voice Active
         </p>
-        <p className="text-muted-foreground text-sm mt-1">
-          {isHolding ? `Releasing in ${Math.ceil((HOLD_DURATION - (progress * HOLD_DURATION / 100)) / 1000)}s` : "Limpopo Provincial Command Centre connected"}
+        <p className="text-muted-foreground text-xs mt-1 max-w-[200px] mx-auto leading-relaxed">
+          Say "Send Police" or "Help Me" for immediate action.
         </p>
       </div>
     </div>

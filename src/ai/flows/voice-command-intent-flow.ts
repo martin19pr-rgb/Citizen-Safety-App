@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for recognizing voice commands
@@ -24,7 +25,7 @@ const VoiceCommandIntentOutputSchema = z.object({
   intent: z
     .enum(['police', 'ambulance', 'fire', 'security', 'medical', 'help', 'none'])
     .describe(
-      'The recognized intent based on the voice command. Can be one of: police, ambulance, fire, security, medical, help, or none if no clear intent is found.'
+      'The recognized intent based on the voice command.'
     ),
   feedbackMessage: z
     .string()
@@ -47,12 +48,38 @@ const voiceCommandIntentPrompt = ai.definePrompt({
   name: 'voiceCommandIntentPrompt',
   input: { schema: VoiceCommandIntentInputSchema },
   output: { schema: VoiceCommandIntentOutputSchema },
-  prompt: `You are an AI assistant designed to interpret emergency voice commands and provide immediate, reassuring feedback.
+  prompt: `You are an AI assistant designed to interpret emergency voice commands for a safety app.
 
 The user will provide a voice command transcript. Your task is to:
 1. Identify the primary emergency service intent (police, ambulance, fire, security, medical, or general help).
 2. Generate a concise and reassuring voice feedback message.
-3. Set 'serviceDispatched' to true if an emergency service is clearly requested, otherwise false (though in this context, most commands will trigger dispatch).
+3. Set 'serviceDispatched' to true if an emergency service is clearly requested.
 
-Here are the recognized commands and their corresponding intents:
-- 
+Recognized command patterns:
+- "Send Police" -> police
+- "Send Ambulance" -> ambulance
+- "Send Fire" -> fire
+- "Send Security" -> security
+- "Send Medical" -> medical
+- "Help Me" -> help
+
+Feedback Examples:
+- "Police dispatched • Family notified • Help is coming"
+- "Ambulance en route • Medical team alerted • Help is coming"
+
+Transcript: {{{transcript}}}
+
+Return the structured JSON output.`,
+});
+
+const voiceCommandIntentFlow = ai.defineFlow(
+  {
+    name: 'voiceCommandIntentFlow',
+    inputSchema: VoiceCommandIntentInputSchema,
+    outputSchema: VoiceCommandIntentOutputSchema,
+  },
+  async (input) => {
+    const { output } = await voiceCommandIntentPrompt(input);
+    return output!;
+  }
+);

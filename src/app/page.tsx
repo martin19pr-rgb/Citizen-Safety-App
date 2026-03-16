@@ -1,14 +1,22 @@
 
+"use client";
+
+import React, { useState } from 'react';
 import { SOSButton } from '@/components/sos-button';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
 import { RiskScoreCard } from '@/components/risk-score-card';
+import { VoiceGuardian } from '@/components/voice-guardian';
 import { Bell, Shield, UserCheck, Wind } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Home() {
+  const [isListening, setIsListening] = useState(false);
+
   return (
     <main className="min-h-screen pb-32 pt-12 px-6 flex flex-col max-w-2xl mx-auto">
+      <VoiceGuardian onStatusChange={setIsListening} />
+      
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <div>
@@ -29,7 +37,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col gap-8">
         {/* SOS Central Piece */}
         <section className="flex flex-col items-center justify-center py-6">
-          <SOSButton />
+          <SOSButton listening={isListening} />
         </section>
 
         {/* Real-time Status Grid */}
@@ -62,7 +70,7 @@ export default function Home() {
                     src={`https://picsum.photos/seed/alert${i}/200/200`} 
                     alt="Alert" 
                     fill 
-                    className="object-cover"
+                    className="object-cover opacity-80"
                     data-ai-hint="security footage"
                   />
                 </div>

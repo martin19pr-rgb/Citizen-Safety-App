@@ -1,50 +1,129 @@
 
+"use client";
+
+import React, { useState } from 'react';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
-import { Shield, Users, Database, Settings, LogOut, ChevronRight, Check } from 'lucide-react';
+import { Shield, Users, Database, Settings, LogOut, ChevronRight, Check, MapPin, Edit2, Save, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 export default function ProfilePage() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState({
+    name: 'Lebogang Nkosi',
+    bloodType: 'O+',
+    allergies: 'Penicillin, Peanuts',
+    vehiclePlate: 'LP 44 NN GP',
+    spouseName: 'Annah Nkosi',
+    photoUrl: 'https://picsum.photos/seed/user/200/200'
+  });
+
+  const handlePhotoUpload = () => {
+    // Simulated photo upload - in a real app this would open a file picker
+    const seeds = ['user1', 'user2', 'user3', 'user4'];
+    const randomSeed = seeds[Math.floor(Math.random() * seeds.length)];
+    setProfile(prev => ({ ...prev, photoUrl: `https://picsum.photos/seed/${randomSeed}/200/200` }));
+  };
+
   return (
     <main className="min-h-screen pb-32 pt-12 px-6 max-w-2xl mx-auto flex flex-col gap-8">
       <header className="flex items-center gap-6 mb-4">
-        <div className="relative">
-          <Avatar className="w-24 h-24 border-2 border-primary p-1">
-            <AvatarImage src="https://picsum.photos/seed/user/200/200" />
+        <div className="relative group cursor-pointer" onClick={handlePhotoUpload}>
+          <Avatar className="w-24 h-24 border-2 border-primary p-1 transition-transform group-hover:scale-105">
+            <AvatarImage src={profile.photoUrl} />
             <AvatarFallback>LN</AvatarFallback>
           </Avatar>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-full transition-opacity">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
           <div className="absolute -bottom-1 -right-1 bg-primary text-background p-1.5 rounded-full">
             <Shield className="w-4 h-4" />
           </div>
         </div>
-        <div>
-          <h1 className="font-headline text-3xl font-bold tracking-tight">Lebogang Nkosi</h1>
+        <div className="flex-1">
+          {isEditing ? (
+            <Input 
+              value={profile.name} 
+              onChange={(e) => setProfile({...profile, name: e.target.value})}
+              className="font-headline text-2xl font-bold bg-white/5 border-primary/20 h-10 mb-2"
+            />
+          ) : (
+            <h1 className="font-headline text-3xl font-bold tracking-tight">{profile.name}</h1>
+          )}
           <p className="text-primary text-xs font-bold tracking-widest uppercase">Verified Citizen • Level 4 Security</p>
         </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full hover:bg-white/10"
+          onClick={() => setIsEditing(!isEditing)}
+        >
+          {isEditing ? <Save className="w-5 h-5 text-primary" /> : <Edit2 className="w-5 h-5 text-white/60" />}
+        </Button>
       </header>
 
       <div className="flex flex-col gap-6">
         <section>
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Medical & Vehicle Details</h2>
+          <GlassCard className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] text-muted-foreground uppercase">Blood Type</Label>
+              {isEditing ? (
+                <Input value={profile.bloodType} onChange={(e) => setProfile({...profile, bloodType: e.target.value})} className="bg-white/5 border-white/10" />
+              ) : (
+                <p className="text-sm font-bold text-white">{profile.bloodType}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] text-muted-foreground uppercase">Allergies</Label>
+              {isEditing ? (
+                <Input value={profile.allergies} onChange={(e) => setProfile({...profile, allergies: e.target.value})} className="bg-white/5 border-white/10" />
+              ) : (
+                <p className="text-sm font-bold text-white">{profile.allergies}</p>
+              )}
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-[10px] text-muted-foreground uppercase">Vehicle Registration</Label>
+              {isEditing ? (
+                <Input value={profile.vehiclePlate} onChange={(e) => setProfile({...profile, vehiclePlate: e.target.value})} className="bg-white/5 border-white/10" />
+              ) : (
+                <p className="text-sm font-bold text-white">{profile.vehiclePlate}</p>
+              )}
+            </div>
+          </GlassCard>
+        </section>
+
+        <section>
           <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Family Protection Network</h2>
           <GlassCard className="flex flex-col gap-4">
-            {[
-              { name: 'Sarah Nkosi (Spouse)', status: 'Active' },
-              { name: 'Junior Nkosi (Son)', status: 'Pending' }
-            ].map((member) => (
-              <div key={member.name} className="flex items-center justify-between group cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-white/40" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{member.name}</p>
-                    <p className="text-[10px] text-primary">{member.status}</p>
-                  </div>
+            <div className="flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white/40" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
+                <div>
+                  <p className="text-sm font-bold text-white">{profile.spouseName} (Spouse)</p>
+                  <p className="text-[10px] text-primary">Active</p>
+                </div>
               </div>
-            ))}
+              <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
+            </div>
+            <div className="flex items-center justify-between group cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white/40" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Junior Nkosi (Son)</p>
+                  <p className="text-[10px] text-muted-foreground">Pending Approval</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
+            </div>
             <button className="mt-2 w-full py-3 rounded-full border border-dashed border-white/20 hover:border-primary/50 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
               + Add Family Member
             </button>
@@ -52,7 +131,7 @@ export default function ProfilePage() {
         </section>
 
         <section>
-          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Guardian & Privacy Control (POPIA)</h2>
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Guardian & Privacy Control</h2>
           <GlassCard className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -61,7 +140,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Dual-Camera Recording</p>
-                  <p className="text-[10px] text-muted-foreground">Maintains 20s buffer for evidence</p>
+                  <p className="text-[10px] text-muted-foreground">Continuous evidence logging</p>
                 </div>
               </div>
               <Switch defaultChecked />
@@ -74,7 +153,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Real-time Location Share</p>
-                  <p className="text-[10px] text-muted-foreground">Visible to family & responders</p>
+                  <p className="text-[10px] text-muted-foreground">Visible to {profile.spouseName} & responders</p>
                 </div>
               </div>
               <Switch defaultChecked />
@@ -86,7 +165,7 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-bold uppercase text-primary">POPIA COMPLIANT</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Your data is encrypted end-to-end. Limpopo Provincial Safety does not sell your personal information. Video evidence is deleted after 48 hours unless flagged in an incident.
+                Your data is encrypted end-to-end. Video evidence is stored indefinitely during active journeys for your protection.
               </p>
             </div>
           </GlassCard>
@@ -115,5 +194,3 @@ export default function ProfilePage() {
     </main>
   );
 }
-
-import { MapPin } from 'lucide-react';
