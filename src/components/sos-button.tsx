@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, CheckCircle2, XCircle, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface SOSButtonProps {
   listening?: boolean;
@@ -18,8 +22,11 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const progressRef = useRef<number>(0);
   const { toast } = useToast();
+  
+  const db = useFirestore();
+  const { user } = useUser();
 
-  const HOLD_DURATION = 3000; // Reduced to 3s for faster emergency access
+  const HOLD_DURATION = 3000;
 
   useEffect(() => {
     if (isHolding && status === 'idle') {
@@ -31,7 +38,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
         progressRef.current = newProgress;
 
         if (newProgress === 100) {
-          handleDispatch('General SOS');
+          handleDispatch('manual_sos');
         }
       }, 50);
     } else {
@@ -52,8 +59,29 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
     setStatus('dispatched');
     if (timerRef.current) clearInterval(timerRef.current);
     
+    // Log incident to Firebase
+    if (db) {
+      const incidentData = {
+        userId: user?.uid || 'anonymous',
+        type: type,
+        status: 'dispatched',
+        timestamp: serverTimestamp(),
+        location: { lat: -23.9045, lng: 29.4688 } // Polokwane Default
+      };
+      
+      const incidentsRef = collection(db, 'incidents');
+      addDoc(incidentsRef, incidentData).catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: incidentsRef.path,
+          operation: 'create',
+          requestResourceData: incidentData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+    }
+
     toast({
-      title: `${type.toUpperCase()} DISPATCHED`,
+      title: `${type.toUpperCase().replace('_', ' ')} DISPATCHED`,
       description: "Responders are en route. Family and emergency contacts have been notified.",
     });
 

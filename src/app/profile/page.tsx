@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
 import { Shield, Users, Database, Settings, LogOut, ChevronRight, Check, MapPin, Edit2, Save, Camera } from 'lucide-react';
@@ -10,8 +10,16 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProfilePage() {
+  const { user } = useUser();
+  const db = useFirestore();
+  const { data: remoteProfile, loading } = useDoc(user ? doc(db, 'users', user.uid) : null);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: 'Lebogang Nkosi',
@@ -22,12 +30,42 @@ export default function ProfilePage() {
     photoUrl: 'https://picsum.photos/seed/user/200/200'
   });
 
+  useEffect(() => {
+    if (remoteProfile) {
+      setProfile({
+        name: remoteProfile.name || 'Lebogang Nkosi',
+        bloodType: remoteProfile.bloodType || 'O+',
+        allergies: remoteProfile.allergies || 'Penicillin, Peanuts',
+        vehiclePlate: remoteProfile.vehiclePlate || 'LP 44 NN GP',
+        spouseName: remoteProfile.spouseName || 'Annah Nkosi',
+        photoUrl: remoteProfile.photoUrl || 'https://picsum.photos/seed/user/200/200'
+      });
+    }
+  }, [remoteProfile]);
+
+  const handleSave = () => {
+    if (!user || !db) return;
+    
+    const userRef = doc(db, 'users', user.uid);
+    setDoc(userRef, profile, { merge: true })
+      .then(() => setIsEditing(false))
+      .catch(async (err) => {
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'update',
+          requestResourceData: profile,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  };
+
   const handlePhotoUpload = () => {
-    // Simulated photo upload - in a real app this would open a file picker
     const seeds = ['user1', 'user2', 'user3', 'user4'];
     const randomSeed = seeds[Math.floor(Math.random() * seeds.length)];
     setProfile(prev => ({ ...prev, photoUrl: `https://picsum.photos/seed/${randomSeed}/200/200` }));
   };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Guardian Profile...</div>;
 
   return (
     <main className="min-h-screen pb-32 pt-12 px-6 max-w-2xl mx-auto flex flex-col gap-8">
@@ -60,7 +98,7 @@ export default function ProfilePage() {
           variant="ghost" 
           size="icon" 
           className="rounded-full hover:bg-white/10"
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
         >
           {isEditing ? <Save className="w-5 h-5 text-primary" /> : <Edit2 className="w-5 h-5 text-white/60" />}
         </Button>
@@ -112,21 +150,6 @@ export default function ProfilePage() {
               </div>
               <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
             </div>
-            <div className="flex items-center justify-between group cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white/40" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">Junior Nkosi (Son)</p>
-                  <p className="text-[10px] text-muted-foreground">Pending Approval</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
-            </div>
-            <button className="mt-2 w-full py-3 rounded-full border border-dashed border-white/20 hover:border-primary/50 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-              + Add Family Member
-            </button>
           </GlassCard>
         </section>
 
@@ -169,24 +192,6 @@ export default function ProfilePage() {
               </p>
             </div>
           </GlassCard>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <button className="w-full glass-card p-4 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-colors">
-            <div className="flex items-center gap-4">
-              <Settings className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-bold uppercase tracking-wider">App Settings</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-white/20" />
-          </button>
-          
-          <button className="w-full glass-card p-4 rounded-2xl flex items-center justify-between hover:bg-destructive/10 group transition-colors">
-            <div className="flex items-center gap-4">
-              <LogOut className="w-5 h-5 text-destructive" />
-              <span className="text-sm font-bold uppercase tracking-wider text-destructive">Sign Out</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-destructive/20 group-hover:text-destructive" />
-          </button>
         </section>
       </div>
 
