@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "limpopo-savanna",
+      "description": "Limpopo savanna at golden hour with sunset",
+      "imageUrl": "https://picsum.photos/seed/limpopo/1920/1080",
+      "imageHint": "savanna sunset"
+    },
+    {
+      "id": "incident-preview-1",
+      "description": "CCTV footage of a road incident",
+      "imageUrl": "https://picsum.photos/seed/incident1/400/300",
+      "imageHint": "road accident"
+    },
+    {
+      "id": "incident-preview-2",
+      "description": "Night time street security footage",
+      "imageUrl": "https://picsum.photos/seed/incident2/400/300",
+      "imageHint": "street night"
+    },
+    {
+      "id": "drone-view",
+      "description": "Aerial drone view of a highway",
+      "imageUrl": "https://picsum.photos/seed/drone/800/600",
+      "imageHint": "aerial highway"
+    }
+  ]
 }
