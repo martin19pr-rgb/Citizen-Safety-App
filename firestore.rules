@@ -1,0 +1,26 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper to check for roles (assumes custom claims or a roles collection)
+    function hasRole(role) {
+      return request.auth != null && (request.auth.token.role == role || request.auth.uid != null);
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /incidents/{incidentId} {
+      // Citizens can create incidents and read their own
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (resource.data.citizen.id == request.auth.uid || hasRole('police_commander') || hasRole('premier'));
+      
+      // Police can update status and officers
+      allow update: if hasRole('police_commander') || hasRole('officer');
+      
+      // Premier can read high priority incidents
+      allow read: if hasRole('premier') && resource.data.priority in ['HIGH', 'CRITICAL'];
+    }
+  }
+}

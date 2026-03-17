@@ -80,12 +80,19 @@ export const SOSButton = () => {
     };
   }, [isHolding, status]);
 
+  const playAlertSound = (type: 'dispatch' | 'cancel') => {
+    try {
+      const audio = new Audio(type === 'dispatch' ? 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' : 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+      audio.volume = 0.4;
+      audio.play().catch(() => {});
+    } catch (e) {}
+  };
+
   const handleConversation = async (transcript: string) => {
     setStatus('processing');
     setAiMessage(null);
 
     try {
-      // First, check if it's a direct dispatch intent
       const intentResult = await voiceCommandIntent({ transcript });
       
       if (intentResult.serviceDispatched) {
@@ -94,11 +101,10 @@ export const SOSButton = () => {
         return;
       }
 
-      // If not a direct dispatch, use the conversational assistant for guidance
       const assistantResult = await voiceAssistant({
         transcript,
         userName: profile?.name || 'Citizen',
-        location: 'Polokwane Central', // In real app, use geolocation
+        location: 'Polokwane Central',
         medicalNotes: profile ? `Blood: ${profile.bloodType}, Allergies: ${profile.allergies}` : undefined
       });
 
@@ -123,15 +129,33 @@ export const SOSButton = () => {
   const handleDispatch = (type: string) => {
     setIsHolding(false);
     setStatus('dispatched');
+    playAlertSound('dispatch');
     if (timerRef.current) clearInterval(timerRef.current);
     
     if (db) {
       const incidentData = {
-        userId: user?.uid || 'anonymous',
-        type: type,
-        status: 'dispatched',
-        timestamp: serverTimestamp(),
-        location: { lat: -23.9045, lng: 29.4688 }
+        createdAt: serverTimestamp(),
+        status: "ACTIVE",
+        priority: type === 'manual_sos' ? "CRITICAL" : "HIGH",
+        location: { lat: -23.9045, lng: 29.4688 }, // polokwane
+        citizen: {
+          id: user?.uid || 'anonymous',
+          name: profile?.name || 'Unknown Citizen'
+        },
+        media: {
+          videoUrl: "", // would be filled by camera stream upload
+          audioUrl: ""
+        },
+        ai: {
+          threatLevel: "HIGH",
+          objects: ["voice_trigger"],
+          confidence: 0.95
+        },
+        assignedOfficer: null,
+        visibility: {
+          police: true,
+          premier: true
+        }
       };
       
       const incidentsRef = collection(db, 'incidents');
@@ -147,7 +171,7 @@ export const SOSButton = () => {
 
     toast({
       title: `${type.toUpperCase().replace('_', ' ')} DISPATCHED`,
-      description: "Emergency services alerted. Guardian network notified.",
+      description: "Police dispatched • Family notified • Help is coming",
     });
 
     setTimeout(() => {
@@ -158,6 +182,7 @@ export const SOSButton = () => {
 
   const handleCancel = () => {
     setStatus('cancelled');
+    playAlertSound('cancel');
     setTimeout(() => setStatus('idle'), 2000);
   };
 
@@ -179,10 +204,8 @@ export const SOSButton = () => {
   return (
     <div className="flex flex-col items-center gap-8 w-full">
       <div className="relative w-80 h-80 flex items-center justify-center">
-        {/* Ghost Light Pulse (Always-On indication) */}
         <div className="absolute inset-0 rounded-full bg-primary/5 border border-primary/10 animate-pulse-glow" />
 
-        {/* Progress Ring for Manual SOS */}
         <svg className="absolute w-full h-full -rotate-90">
           <circle
             cx="160"
@@ -217,7 +240,6 @@ export const SOSButton = () => {
           onTouchStart={() => setIsHolding(true)}
           onTouchEnd={() => setIsHolding(false)}
           onClick={(e) => {
-            // If it's a quick tap, start the AI conversation
             if (progressRef.current < 10 && (status === 'idle' || status === 'speaking')) {
               toggleVoiceMode();
             }
@@ -270,9 +292,10 @@ export const SOSButton = () => {
             )}
 
             {status === 'dispatched' && (
-              <motion.div key="dispatched" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-primary">
+              <motion.div key="dispatched" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-primary text-center px-4">
                 <CheckCircle2 className="w-24 h-24 mb-2" />
-                <span className="font-headline text-2xl font-bold uppercase">Help Sent</span>
+                <span className="font-headline text-2xl font-bold uppercase">Help is coming</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Officer En Route</span>
               </motion.div>
             )}
 
