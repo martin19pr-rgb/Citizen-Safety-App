@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
-import { Shield, Users, Database, Settings, LogOut, ChevronRight, Check, MapPin, Edit2, Save, Camera } from 'lucide-react';
+import { Shield, Users, Database, MapPin, Edit2, Save, Camera, ChevronRight, Check } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -65,7 +65,14 @@ export default function ProfilePage() {
     setProfile(prev => ({ ...prev, photoUrl: `https://picsum.photos/seed/${randomSeed}/200/200` }));
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Guardian Profile...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="font-headline text-primary uppercase tracking-widest text-xs font-bold">Initializing Guardian Profile</p>
+      </div>
+    </div>
+  );
 
   return (
     <main className="min-h-screen pb-32 pt-12 px-6 max-w-2xl mx-auto flex flex-col gap-8">
@@ -144,8 +151,17 @@ export default function ProfilePage() {
                   <Users className="w-6 h-6 text-white/40" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">{profile.spouseName} (Spouse)</p>
-                  <p className="text-[10px] text-primary">Active</p>
+                  {isEditing ? (
+                    <div className="space-y-1">
+                      <Label className="text-[8px] uppercase">Primary Contact</Label>
+                      <Input value={profile.spouseName} onChange={(e) => setProfile({...profile, spouseName: e.target.value})} className="bg-white/5 h-8 text-xs" />
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm font-bold text-white">{profile.spouseName} (Spouse)</p>
+                      <p className="text-[10px] text-primary">Active Guardian</p>
+                    </>
+                  )}
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
@@ -162,8 +178,8 @@ export default function ProfilePage() {
                   <Database className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Dual-Camera Recording</p>
-                  <p className="text-[10px] text-muted-foreground">Continuous evidence logging</p>
+                  <p className="text-sm font-bold text-white">Continuous Dual-Camera Recording</p>
+                  <p className="text-[10px] text-muted-foreground">Always-on evidence logging</p>
                 </div>
               </div>
               <Switch defaultChecked />
@@ -188,7 +204,7 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-bold uppercase text-primary">POPIA COMPLIANT</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Your data is encrypted end-to-end. Video evidence is stored indefinitely during active journeys for your protection.
+                Your data is encrypted end-to-end. Video evidence is stored indefinitely during active journeys for your protection and legal defense.
               </p>
             </div>
           </GlassCard>

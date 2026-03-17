@@ -52,7 +52,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isHolding]);
+  }, [isHolding, status]);
 
   const handleDispatch = (type: string) => {
     setIsHolding(false);
@@ -135,13 +135,12 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
           onTouchEnd={() => setIsHolding(false)}
           animate={status === 'idle' ? { 
             scale: isHolding ? 0.95 : 1,
-            boxShadow: listening ? "0 0 50px rgba(255, 255, 255, 0.4)" : ""
           } : {}}
           className={cn(
             "relative w-52 h-52 rounded-full glass-card flex flex-col items-center justify-center gap-2 transition-all duration-500",
-            status === 'idle' && !isHolding && "border-destructive/40 bg-destructive/10",
-            isHolding && "ring-4 ring-destructive glow-accent bg-destructive/30",
-            status === 'dispatched' && "ring-4 ring-primary glow-green bg-primary/20",
+            status === 'idle' && !isHolding && "border-destructive bg-destructive/20 text-destructive shadow-[0_0_30px_rgba(239,68,68,0.3)]",
+            isHolding && "ring-4 ring-destructive glow-accent bg-destructive/40 scale-95",
+            status === 'dispatched' && "ring-4 ring-primary glow-green bg-primary/20 border-primary text-primary",
             status === 'cancelled' && "ring-4 ring-destructive"
           )}
         >
@@ -149,8 +148,8 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
           {listening && status === 'idle' && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              className="absolute inset-0 rounded-full bg-white blur-2xl animate-pulse"
+              animate={{ opacity: 0.4 }}
+              className="absolute inset-0 rounded-full bg-white blur-3xl animate-pulse"
             />
           )}
 
@@ -183,7 +182,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
                 className="flex flex-col items-center text-primary z-10"
               >
                 <CheckCircle2 className="w-20 h-20 mb-2" />
-                <span className="font-headline text-xl font-bold uppercase">Help Received</span>
+                <span className="font-headline text-xl font-bold uppercase">Help Coming</span>
               </motion.div>
             )}
 

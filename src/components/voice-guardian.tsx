@@ -15,15 +15,29 @@ export const VoiceGuardian = ({ onStatusChange, onDispatch }: VoiceGuardianProps
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
   const recognitionRef = useRef<any>(null);
+  const isStartedRef = useRef(false);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.lang = 'en-US';
+    if (!recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+    }
+
+    const startRecognition = () => {
+      if (recognitionRef.current && !isStartedRef.current) {
+        try {
+          recognitionRef.current.start();
+          isStartedRef.current = true;
+        } catch (e) {
+          console.warn('Recognition already started or failed to start:', e);
+        }
+      }
+    };
 
     recognitionRef.current.onstart = () => {
       setIsListening(true);
@@ -32,7 +46,7 @@ export const VoiceGuardian = ({ onStatusChange, onDispatch }: VoiceGuardianProps
 
     recognitionRef.current.onresult = async (event: any) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-      console.log('Voice Command:', transcript);
+      console.log('Voice Command Received:', transcript);
 
       try {
         const result = await voiceCommandIntent({ transcript });
@@ -41,14 +55,18 @@ export const VoiceGuardian = ({ onStatusChange, onDispatch }: VoiceGuardianProps
           onDispatch?.(result.intent);
           
           // Play audio feedback
-          const audioResponse = await postIncidentDebrief({
-            incidentType: result.intent,
-            sensorReadingsSummary: "Voice activation triggered emergency protocol.",
-            userFeedback: transcript
-          });
+          try {
+            const audioResponse = await postIncidentDebrief({
+              incidentType: result.intent,
+              sensorReadingsSummary: "Voice activation triggered emergency protocol.",
+              userFeedback: transcript
+            });
 
-          const audio = new Audio(audioResponse.audioDataUri);
-          audio.play();
+            const audio = new Audio(audioResponse.audioDataUri);
+            audio.play().catch(e => console.error("Audio playback failed", e));
+          } catch (debriefError) {
+            console.error('Debrief flow error (likely quota):', debriefError);
+          }
 
           toast({
             title: result.feedbackMessage.split('•')[0].trim(),
@@ -61,19 +79,30 @@ export const VoiceGuardian = ({ onStatusChange, onDispatch }: VoiceGuardianProps
     };
 
     recognitionRef.current.onend = () => {
-      // Automatically restart to keep "Always On" capability
-      if (recognitionRef.current) recognitionRef.current.start();
+      isStartedRef.current = false;
+      setIsListening(false);
+      onStatusChange?.(false);
+      // Automatically restart to keep "Always On" capability after a short delay
+      setTimeout(startRecognition, 100);
     };
 
-    recognitionRef.current.start();
+    recognitionRef.current.onerror = (event: any) => {
+      console.error('Speech recognition error', event.error);
+      if (event.error === 'not-allowed') {
+        isStartedRef.current = false;
+      }
+    };
+
+    startRecognition();
 
     return () => {
       if (recognitionRef.current) {
+        recognitionRef.current.onend = null;
         recognitionRef.current.stop();
-        recognitionRef.current = null;
+        isStartedRef.current = false;
       }
     };
-  }, []);
+  }, [onStatusChange, onDispatch, toast]);
 
   return null; // Invisible brain component
 };
