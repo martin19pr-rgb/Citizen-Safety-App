@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -72,7 +71,7 @@ export default function Home() {
                     src={`https://picsum.photos/seed/alert${i}/200/200`} 
                     alt="Alert" 
                     fill 
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+                    sizes="(max-width: 768px) 100vw, 200px"
                     className="object-cover opacity-80"
                     data-ai-hint="security footage"
                   />

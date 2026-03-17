@@ -1,4 +1,3 @@
-
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
 import { AlertTriangle, MapPin, Clock, Play } from 'lucide-react';

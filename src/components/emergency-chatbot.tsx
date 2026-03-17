@@ -1,32 +1,78 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GlassCard } from './glass-card';
-import { MessageCircle, X, Send, Bot, ShieldAlert } from 'lucide-react';
+import { Mic, X, Bot, ShieldAlert, Volume2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { voiceAssistant } from '@/ai/flows/voice-assistant-flow';
 
 export const EmergencyChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'I am your Emergency AI Guardian. How can I assist you right now?' }
+    { role: 'assistant', text: 'I am your Emergency AI Guardian. Press the microphone and speak to me.' }
   ]);
-  const [input, setInput] = useState('');
+  
+  const recognitionRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg = { role: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
 
-    // Simulate AI Response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        text: 'Analyzing your situation... I have alerted the nearest command center. Stay calm and follow standard safety protocols.' 
-      }]);
-    }, 1000);
+      recognitionRef.current.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        handleVoiceInput(transcript);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      setIsListening(true);
+      recognitionRef.current?.start();
+    }
+  };
+
+  const handleVoiceInput = async (transcript: string) => {
+    setIsProcessing(true);
+    setMessages(prev => [...prev, { role: 'user', text: transcript }]);
+
+    try {
+      const response = await voiceAssistant({ transcript });
+      
+      setMessages(prev => [...prev, { role: 'assistant', text: response.text }]);
+      
+      // Play audio response
+      if (audioRef.current) {
+        audioRef.current.src = response.audioDataUri;
+        audioRef.current.play();
+      } else {
+        const audio = new Audio(response.audioDataUri);
+        audioRef.current = audio;
+        audio.play();
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', text: "I'm sorry, I'm having trouble connecting to the command network. Please use the SOS button if this is an emergency." }]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -35,7 +81,7 @@ export const EmergencyChatbot = () => {
         onClick={() => setIsOpen(true)}
         className="fixed bottom-32 right-6 p-4 rounded-full bg-accent text-accent-foreground shadow-lg hover:scale-105 transition-transform z-40 glow-accent"
       >
-        <MessageCircle className="w-6 h-6" />
+        <Bot className="w-6 h-6" />
       </button>
 
       <AnimatePresence>
@@ -44,15 +90,20 @@ export const EmergencyChatbot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed inset-x-6 bottom-32 top-20 z-50 md:left-auto md:right-6 md:w-96 flex flex-col"
+            className="fixed inset-x-6 bottom-32 top-24 z-50 md:left-auto md:right-6 md:w-96 flex flex-col"
           >
             <GlassCard className="h-full flex flex-col p-0 overflow-hidden border-accent/20">
               <div className="p-4 border-b border-white/10 bg-accent/10 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <Bot className="w-5 h-5 text-accent" />
+                  <div className="relative">
+                    <Bot className="w-5 h-5 text-accent" />
+                    {(isListening || isProcessing) && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-ping" />
+                    )}
+                  </div>
                   <div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-white">Emergency AI</h3>
-                    <p className="text-[10px] text-accent font-medium">Command System Linked</p>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-white">Emergency Voice AI</h3>
+                    <p className="text-[10px] text-accent font-medium">Real-time Safety Network</p>
                   </div>
                 </div>
                 <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/10 rounded-full">
@@ -63,28 +114,39 @@ export const EmergencyChatbot = () => {
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                 {messages.map((msg, i) => (
                   <div key={i} className={cn(
-                    "max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed",
-                    msg.role === 'assistant' ? "bg-white/5 text-white/80 self-start" : "bg-accent/20 text-white self-end border border-accent/20"
+                    "max-w-[85%] p-4 rounded-2xl text-xs leading-relaxed transition-all",
+                    msg.role === 'assistant' 
+                      ? "bg-white/5 text-white/90 self-start border border-white/5" 
+                      : "bg-accent/20 text-white self-end border border-accent/20"
                   )}>
+                    {msg.role === 'assistant' && <Volume2 className="w-3 h-3 mb-1 text-accent inline-block mr-2" />}
                     {msg.text}
                   </div>
                 ))}
+                {isProcessing && (
+                  <div className="self-start bg-white/5 p-4 rounded-2xl border border-white/5 animate-pulse flex items-center gap-2">
+                    <Loader2 className="w-3 h-3 animate-spin text-accent" />
+                    <span className="text-[10px] uppercase font-bold text-accent tracking-tighter">AI Analysing...</span>
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 bg-white/5 flex gap-2">
-                <input 
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask for guidance..."
-                  className="flex-1 bg-black/20 border border-white/10 rounded-full px-4 py-2 text-xs focus:outline-none focus:ring-1 ring-accent"
-                />
+              <div className="p-6 bg-white/5 flex flex-col items-center gap-4">
                 <button 
-                  onClick={handleSend}
-                  className="p-2 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={toggleListening}
+                  disabled={isProcessing}
+                  className={cn(
+                    "w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500",
+                    isListening 
+                      ? "bg-destructive/40 ring-4 ring-destructive animate-pulse scale-110" 
+                      : "bg-accent/20 border-2 border-accent/40 text-accent hover:bg-accent/30"
+                  )}
                 >
-                  <Send className="w-4 h-4" />
+                  <Mic className={cn("w-8 h-8", isListening ? "text-white" : "text-accent")} />
                 </button>
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest text-center">
+                  {isListening ? "Listening..." : isProcessing ? "Processing Response..." : "Tap to Speak to Assistant"}
+                </p>
               </div>
             </GlassCard>
           </motion.div>
