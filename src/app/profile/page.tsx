@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
-import { Shield, Users, Database, MapPin, Edit2, Save, Camera, ChevronRight, Check } from 'lucide-react';
+import { Shield, Users, Database, MapPin, Edit2, Save, Camera, ChevronRight, Check, Phone } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,9 @@ export default function ProfilePage() {
     bloodType: 'O+',
     allergies: 'Penicillin, Peanuts',
     vehiclePlate: 'LP 44 NN GP',
-    spouseName: 'Annah Nkosi',
+    spouseName: 'Annah',
+    secondaryContactName: 'Thabo Nkosi',
+    secondaryContactPhone: '082 555 1234',
     photoUrl: 'https://picsum.photos/seed/user/200/200'
   });
 
@@ -37,7 +39,9 @@ export default function ProfilePage() {
         bloodType: remoteProfile.bloodType || 'O+',
         allergies: remoteProfile.allergies || 'Penicillin, Peanuts',
         vehiclePlate: remoteProfile.vehiclePlate || 'LP 44 NN GP',
-        spouseName: remoteProfile.spouseName || 'Annah Nkosi',
+        spouseName: remoteProfile.spouseName || 'Annah',
+        secondaryContactName: remoteProfile.secondaryContactName || 'Thabo Nkosi',
+        secondaryContactPhone: remoteProfile.secondaryContactPhone || '082 555 1234',
         photoUrl: remoteProfile.photoUrl || 'https://picsum.photos/seed/user/200/200'
       });
     }
@@ -143,34 +147,50 @@ export default function ProfilePage() {
         </section>
 
         <section>
-          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Family Protection Network</h2>
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Guardian Network</h2>
           <GlassCard className="flex flex-col gap-4">
-            <div className="flex items-center justify-between group cursor-pointer">
+            <div className="flex items-center justify-between group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white/40" />
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-primary" />
                 </div>
                 <div>
+                   <Label className="text-[8px] uppercase text-muted-foreground">Primary Guardian (Spouse)</Label>
                   {isEditing ? (
-                    <div className="space-y-1">
-                      <Label className="text-[8px] uppercase">Primary Contact</Label>
-                      <Input value={profile.spouseName} onChange={(e) => setProfile({...profile, spouseName: e.target.value})} className="bg-white/5 h-8 text-xs" />
-                    </div>
+                    <Input value={profile.spouseName} onChange={(e) => setProfile({...profile, spouseName: e.target.value})} className="bg-white/5 h-8 text-xs" />
                   ) : (
-                    <>
-                      <p className="text-sm font-bold text-white">{profile.spouseName} (Spouse)</p>
-                      <p className="text-[10px] text-primary">Active Guardian</p>
-                    </>
+                    <p className="text-sm font-bold text-white">{profile.spouseName}</p>
                   )}
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
+            </div>
+
+            <div className="pt-4 border-t border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Phone className="w-6 h-6 text-white/40" />
+                </div>
+                <div className="flex-1 grid grid-cols-1 gap-2">
+                  <Label className="text-[8px] uppercase text-muted-foreground">Secondary Contact</Label>
+                  {isEditing ? (
+                    <div className="flex gap-2">
+                      <Input value={profile.secondaryContactName} onChange={(e) => setProfile({...profile, secondaryContactName: e.target.value})} className="bg-white/5 h-8 text-xs" placeholder="Name" />
+                      <Input value={profile.secondaryContactPhone} onChange={(e) => setProfile({...profile, secondaryContactPhone: e.target.value})} className="bg-white/5 h-8 text-xs" placeholder="Phone" />
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm font-bold text-white">{profile.secondaryContactName}</p>
+                      <p className="text-xs text-muted-foreground">{profile.secondaryContactPhone}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </GlassCard>
         </section>
 
         <section>
-          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Guardian & Privacy Control</h2>
+          <h2 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-1">Privacy & Evidence</h2>
           <GlassCard className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -178,8 +198,8 @@ export default function ProfilePage() {
                   <Database className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Continuous Dual-Camera Recording</p>
-                  <p className="text-[10px] text-muted-foreground">Always-on evidence logging</p>
+                  <p className="text-sm font-bold text-white">Dual-Camera Recording</p>
+                  <p className="text-[10px] text-muted-foreground">Always-on logging during journeys</p>
                 </div>
               </div>
               <Switch defaultChecked />
@@ -191,8 +211,8 @@ export default function ProfilePage() {
                   <MapPin className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Real-time Location Share</p>
-                  <p className="text-[10px] text-muted-foreground">Visible to {profile.spouseName} & responders</p>
+                  <p className="text-sm font-bold text-white">Location Sharing</p>
+                  <p className="text-[10px] text-muted-foreground">Shared with Annah & Thabo</p>
                 </div>
               </div>
               <Switch defaultChecked />
@@ -204,7 +224,7 @@ export default function ProfilePage() {
                 <span className="text-[10px] font-bold uppercase text-primary">POPIA COMPLIANT</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Your data is encrypted end-to-end. Video evidence is stored indefinitely during active journeys for your protection and legal defense.
+                Your evidence is encrypted. Only you or authorized command officers can unlock footage for incident review.
               </p>
             </div>
           </GlassCard>

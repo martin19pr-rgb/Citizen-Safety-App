@@ -11,6 +11,8 @@
         "allergies": { "type": "string" },
         "vehiclePlate": { "type": "string" },
         "spouseName": { "type": "string" },
+        "secondaryContactName": { "type": "string" },
+        "secondaryContactPhone": { "type": "string" },
         "photoUrl": { "type": "string" },
         "level": { "type": "number", "description": "Security clearance level" }
       },

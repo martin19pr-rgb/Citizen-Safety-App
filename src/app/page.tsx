@@ -7,6 +7,7 @@ import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
 import { RiskScoreCard } from '@/components/risk-score-card';
 import { VoiceGuardian } from '@/components/voice-guardian';
+import { EmergencyChatbot } from '@/components/emergency-chatbot';
 import { Bell, Shield, UserCheck, Wind } from 'lucide-react';
 import Image from 'next/image';
 
@@ -16,6 +17,7 @@ export default function Home() {
   return (
     <main className="min-h-screen pb-32 pt-12 px-6 flex flex-col max-w-2xl mx-auto">
       <VoiceGuardian onStatusChange={setIsListening} />
+      <EmergencyChatbot />
       
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
@@ -70,17 +72,18 @@ export default function Home() {
                     src={`https://picsum.photos/seed/alert${i}/200/200`} 
                     alt="Alert" 
                     fill 
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
                     className="object-cover opacity-80"
                     data-ai-hint="security footage"
                   />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-white uppercase tracking-wider">Vehicle Theft Attempt</p>
-                  <p className="text-[10px] text-muted-foreground">N1 Highway • 4.2km away</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Vehicle Threat Blocked</p>
+                  <p className="text-[10px] text-muted-foreground">Polokwane North • 1.2km away</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-primary">RESOLVED</p>
-                  <p className="text-[10px] text-muted-foreground">22m ago</p>
+                  <p className="text-[10px] font-bold text-primary">SECURED</p>
+                  <p className="text-[10px] text-muted-foreground">4m ago</p>
                 </div>
               </GlassCard>
             ))}

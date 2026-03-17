@@ -3,6 +3,7 @@ import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
 import { AlertTriangle, MapPin, Clock, Play } from 'lucide-react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const MOCK_ALERTS = [
   {
@@ -45,7 +46,6 @@ export default function AlertsPage() {
       <div className="flex gap-2">
         <GlassCard className="py-2 px-4 rounded-full border-primary/20 bg-primary/10 text-primary text-[10px] font-bold uppercase">All Incidents</GlassCard>
         <GlassCard className="py-2 px-4 rounded-full border-white/10 text-white/60 text-[10px] font-bold uppercase">Within 5km</GlassCard>
-        <GlassCard className="py-2 px-4 rounded-full border-white/10 text-white/60 text-[10px] font-bold uppercase">Severity: High</GlassCard>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -56,6 +56,7 @@ export default function AlertsPage() {
                 src={alert.image} 
                 alt={alert.type} 
                 fill 
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
                 className="object-cover opacity-60 group-hover:opacity-80 transition-all duration-500 group-hover:scale-105"
                 data-ai-hint="security footage"
               />
@@ -109,5 +110,3 @@ export default function AlertsPage() {
     </main>
   );
 }
-
-import { cn } from '@/lib/utils';

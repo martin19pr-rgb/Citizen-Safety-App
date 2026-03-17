@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, CheckCircle2, XCircle, Mic } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Mic, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
@@ -26,7 +26,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
   const db = useFirestore();
   const { user } = useUser();
 
-  const HOLD_DURATION = 3000;
+  const HOLD_DURATION = 2000; // Faster trigger for emergencies
 
   useEffect(() => {
     if (isHolding && status === 'idle') {
@@ -66,7 +66,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
         type: type,
         status: 'dispatched',
         timestamp: serverTimestamp(),
-        location: { lat: -23.9045, lng: 29.4688 } // Polokwane Default
+        location: { lat: -23.9045, lng: 29.4688 }
       };
       
       const incidentsRef = collection(db, 'incidents');
@@ -82,7 +82,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
 
     toast({
       title: `${type.toUpperCase().replace('_', ' ')} DISPATCHED`,
-      description: "Responders are en route. Family and emergency contacts have been notified.",
+      description: "Police and paramedics alerted. Family contacts Annah and Thabo notified.",
     });
 
     setTimeout(() => {
@@ -106,7 +106,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
             r="110"
             fill="transparent"
             stroke="currentColor"
-            strokeWidth="8"
+            strokeWidth="10"
             className="text-white/5"
           />
           <motion.circle
@@ -115,7 +115,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
             r="110"
             fill="transparent"
             stroke="currentColor"
-            strokeWidth="8"
+            strokeWidth="10"
             strokeDasharray="691"
             strokeDashoffset={691 - (691 * progress) / 100}
             strokeLinecap="round"
@@ -126,7 +126,7 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
           />
         </svg>
 
-        {/* The Button */}
+        {/* The Button - Starts Red, turns Green on Dispatch */}
         <motion.button
           onMouseDown={() => setIsHolding(true)}
           onMouseUp={() => setIsHolding(false)}
@@ -134,22 +134,22 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
           onTouchStart={() => setIsHolding(true)}
           onTouchEnd={() => setIsHolding(false)}
           animate={status === 'idle' ? { 
-            scale: isHolding ? 0.95 : 1,
+            scale: isHolding ? 0.92 : 1,
           } : {}}
           className={cn(
             "relative w-52 h-52 rounded-full glass-card flex flex-col items-center justify-center gap-2 transition-all duration-500",
-            status === 'idle' && !isHolding && "border-destructive bg-destructive/20 text-destructive shadow-[0_0_30px_rgba(239,68,68,0.3)]",
-            isHolding && "ring-4 ring-destructive glow-accent bg-destructive/40 scale-95",
-            status === 'dispatched' && "ring-4 ring-primary glow-green bg-primary/20 border-primary text-primary",
-            status === 'cancelled' && "ring-4 ring-destructive"
+            status === 'idle' && !isHolding && "bg-destructive/40 border-destructive text-destructive shadow-[0_0_50px_rgba(239,68,68,0.4)]",
+            isHolding && "bg-destructive/60 scale-95 ring-4 ring-destructive glow-accent",
+            status === 'dispatched' && "bg-primary/20 border-primary text-primary ring-4 ring-primary glow-green",
+            status === 'cancelled' && "ring-4 ring-destructive/40"
           )}
         >
-          {/* Ghost Light for Voice Activation */}
+          {/* Ghost Light for Prompts/Voice */}
           {listening && status === 'idle' && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              className="absolute inset-0 rounded-full bg-white blur-3xl animate-pulse"
+              animate={{ opacity: 0.6 }}
+              className="absolute inset-0 rounded-full bg-primary/20 blur-2xl animate-pulse"
             />
           )}
 
@@ -163,13 +163,16 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
                 className="flex flex-col items-center z-10"
               >
                 {listening ? (
-                  <Mic className="w-16 h-16 mb-2 text-white animate-pulse" />
+                   <div className="relative">
+                      <Mic className="w-16 h-16 mb-2 text-white animate-pulse" />
+                      <Zap className="absolute -top-1 -right-1 w-4 h-4 text-accent animate-bounce" />
+                   </div>
                 ) : (
                   <ShieldAlert className={cn("w-16 h-16 mb-2 transition-colors", isHolding ? "text-white" : "text-destructive")} />
                 )}
                 <span className="font-headline text-3xl font-bold tracking-tighter text-white">SOS</span>
                 <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">
-                  {isHolding ? "HOLDING..." : listening ? "LISTENING..." : "PRESS & HOLD"}
+                  {isHolding ? "TRIGGERING..." : listening ? "AWAITING VOICE" : "HOLD TO DISPATCH"}
                 </span>
               </motion.div>
             )}
@@ -182,7 +185,8 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
                 className="flex flex-col items-center text-primary z-10"
               >
                 <CheckCircle2 className="w-20 h-20 mb-2" />
-                <span className="font-headline text-xl font-bold uppercase">Help Coming</span>
+                <span className="font-headline text-xl font-bold uppercase text-center">Help Received</span>
+                <span className="text-[8px] uppercase tracking-widest mt-1">Command Sync: OK</span>
               </motion.div>
             )}
 
@@ -207,10 +211,10 @@ export const SOSButton = ({ listening = false }: SOSButtonProps) => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
           </span>
-          Guardian Voice Active
+          Guardian Response Active
         </p>
-        <p className="text-muted-foreground text-xs mt-1 max-w-[200px] mx-auto leading-relaxed">
-          Say "Send Police" or "Help Me" for immediate action.
+        <p className="text-muted-foreground text-[10px] mt-2 max-w-[240px] mx-auto leading-tight uppercase tracking-widest opacity-60">
+          "Police" • "Ambulance" • "Fire" • "Help"
         </p>
       </div>
     </div>
