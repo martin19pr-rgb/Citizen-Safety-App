@@ -36,4 +36,4 @@ Since this code is currently in the Prototyper environment, follow these steps t
 - **AI**: Google Genkit with Gemini 2.5 Flash
 - **Database/Auth**: Firebase Firestore & Firebase Auth
 - **UI**: Tailwind CSS, ShadCN UI, Framer Motion
-- **Icons**: Lucide React
+- **Icons**: Lucide React# Provincial-Safety-Intelligence-App
