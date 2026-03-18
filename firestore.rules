@@ -2,7 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper to check for roles (assumes custom claims or a roles collection)
+    // Helper to check for roles
     function hasRole(role) {
       return request.auth != null && (request.auth.token.role == role || request.auth.uid != null);
     }
@@ -12,15 +12,18 @@ service cloud.firestore {
     }
 
     match /incidents/{incidentId} {
-      // Citizens can create incidents and read their own
+      // Citizens can create incidents
       allow create: if request.auth != null;
-      allow read: if request.auth != null && (resource.data.citizen.id == request.auth.uid || hasRole('police_commander') || hasRole('premier'));
       
-      // Police can update status and officers
+      // Access logic based on roles and priority
+      allow read: if request.auth != null && (
+        resource.data.citizen.uid == request.auth.uid || 
+        hasRole('police_commander') || 
+        (hasRole('premier') && resource.data.priority in ['HIGH', 'CRITICAL', 'high'])
+      );
+      
+      // Officers and commanders can update status
       allow update: if hasRole('police_commander') || hasRole('officer');
-      
-      // Premier can read high priority incidents
-      allow read: if hasRole('premier') && resource.data.priority in ['HIGH', 'CRITICAL'];
     }
   }
 }

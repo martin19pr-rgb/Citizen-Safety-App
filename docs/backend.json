@@ -24,8 +24,9 @@
       "type": "object",
       "properties": {
         "createdAt": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["ACTIVE", "ENROUTE", "RESOLVED", "CANCELLED"] },
-        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "status": { "type": "string", "enum": ["ACTIVE", "ENROUTE", "RESOLVED", "CANCELLED", "pending"] },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL", "low", "medium", "high"] },
+        "type": { "type": "string" },
         "location": {
           "type": "object",
           "properties": {
@@ -36,7 +37,7 @@
         "citizen": {
           "type": "object",
           "properties": {
-            "id": { "type": "string" },
+            "uid": { "type": "string" },
             "name": { "type": "string" }
           }
         },
@@ -50,17 +51,29 @@
         "ai": {
           "type": "object",
           "properties": {
-            "threatLevel": { "type": "string" },
+            "threatLevel": { "type": "number" },
             "objects": { "type": "array", "items": { "type": "string" } },
             "confidence": { "type": "number" }
           }
         },
-        "assignedOfficer": { "type": "string", "nullable": true },
+        "assigned": {
+          "type": "object",
+          "properties": {
+            "officerId": { "type": "string", "nullable": true }
+          }
+        },
         "visibility": {
           "type": "object",
           "properties": {
             "police": { "type": "boolean" },
             "premier": { "type": "boolean" }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "source": { "type": "string" },
+            "createdFrom": { "type": "string" }
           }
         }
       }

@@ -64,7 +64,7 @@ export const SOSButton = () => {
         progressRef.current = newProgress;
 
         if (newProgress === 100) {
-          handleDispatch('manual_sos');
+          handleDispatch('manual_sos', 0.99, ['panic_button']);
         }
       }, 50);
     } else {
@@ -96,7 +96,7 @@ export const SOSButton = () => {
       const intentResult = await voiceCommandIntent({ transcript });
       
       if (intentResult.serviceDispatched) {
-        handleDispatch(intentResult.intent);
+        handleDispatch(intentResult.intent, 0.9, [intentResult.intent]);
         setAiMessage(intentResult.feedbackMessage);
         return;
       }
@@ -126,7 +126,7 @@ export const SOSButton = () => {
     }
   };
 
-  const handleDispatch = (type: string) => {
+  const handleDispatch = (type: string, threatLevel: number, objects: string[]) => {
     setIsHolding(false);
     setStatus('dispatched');
     playAlertSound('dispatch');
@@ -136,25 +136,32 @@ export const SOSButton = () => {
       const incidentData = {
         createdAt: serverTimestamp(),
         status: "ACTIVE",
-        priority: type === 'manual_sos' ? "CRITICAL" : "HIGH",
-        location: { lat: -23.9045, lng: 29.4688 }, // polokwane
+        priority: threatLevel > 0.85 ? "HIGH" : "MEDIUM",
+        type: type,
+        location: { lat: -23.9045, lng: 29.4688 }, // Default Polokwane context
         citizen: {
-          id: user?.uid || 'anonymous',
+          uid: user?.uid || 'anonymous',
           name: profile?.name || 'Unknown Citizen'
         },
         media: {
-          videoUrl: "", // would be filled by camera stream upload
+          videoUrl: "", 
           audioUrl: ""
         },
         ai: {
-          threatLevel: "HIGH",
-          objects: ["voice_trigger"],
+          threatLevel: threatLevel,
+          objects: objects,
           confidence: 0.95
         },
-        assignedOfficer: null,
+        assigned: {
+          officerId: null
+        },
         visibility: {
           police: true,
           premier: true
+        },
+        metadata: {
+          source: 'mobile_app',
+          createdFrom: type === 'manual_sos' ? 'sos' : 'voice_command'
         }
       };
       
@@ -171,19 +178,19 @@ export const SOSButton = () => {
 
     toast({
       title: `${type.toUpperCase().replace('_', ' ')} DISPATCHED`,
-      description: "Police dispatched • Family notified • Help is coming",
+      description: "Command Center notified • Family alerted • Help is coming",
     });
 
     setTimeout(() => {
       setStatus('idle');
       setAiMessage(null);
-    }, 10000);
+    }, 8000);
   };
 
   const handleCancel = () => {
     setStatus('cancelled');
     playAlertSound('cancel');
-    setTimeout(() => setStatus('idle'), 2000);
+    setTimeout(() => setStatus('idle'), 1500);
   };
 
   const toggleVoiceMode = () => {
@@ -204,7 +211,11 @@ export const SOSButton = () => {
   return (
     <div className="flex flex-col items-center gap-8 w-full">
       <div className="relative w-80 h-80 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-primary/5 border border-primary/10 animate-pulse-glow" />
+        {/* Ghost Light Pulse */}
+        <div className={cn(
+          "absolute inset-0 rounded-full transition-all duration-1000",
+          status === 'listening' ? "bg-accent/10 animate-pulse-glow" : "bg-primary/5"
+        )} />
 
         <svg className="absolute w-full h-full -rotate-90">
           <circle
@@ -280,7 +291,7 @@ export const SOSButton = () => {
             {status === 'processing' && (
               <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
                 <Loader2 className="w-20 h-20 mb-2 text-accent animate-spin" />
-                <span className="font-headline text-xl font-bold uppercase tracking-widest">Analysing...</span>
+                <span className="font-headline text-xl font-bold uppercase tracking-widest">Routing Intel...</span>
               </motion.div>
             )}
 
@@ -294,15 +305,15 @@ export const SOSButton = () => {
             {status === 'dispatched' && (
               <motion.div key="dispatched" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-primary text-center px-4">
                 <CheckCircle2 className="w-24 h-24 mb-2" />
-                <span className="font-headline text-2xl font-bold uppercase">Help is coming</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Officer En Route</span>
+                <span className="font-headline text-2xl font-bold uppercase tracking-tighter">SECURED</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Help is Coming</span>
               </motion.div>
             )}
 
             {status === 'cancelled' && (
               <motion.div key="cancelled" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-destructive">
                 <XCircle className="w-24 h-24 mb-2" />
-                <span className="font-headline text-2xl font-bold">CANCELLED</span>
+                <span className="font-headline text-2xl font-bold uppercase tracking-tighter">STANDBY</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -321,18 +332,20 @@ export const SOSButton = () => {
             </p>
           </motion.div>
         ) : (
-          <>
+          <div className="flex flex-col gap-2">
             <p className="text-primary font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-3">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
               </span>
-              Provincial Safety Network Active
+              Provincial Intelligence Active
             </p>
-            <p className="text-muted-foreground text-[10px] mt-3 max-w-[280px] mx-auto leading-relaxed uppercase tracking-[0.2em] opacity-70">
-              "Send Police" • "Medical" • "Help Me"
-            </p>
-          </>
+            <div className="flex gap-2 justify-center opacity-60">
+               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Police</span>
+               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Medical</span>
+               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Fire</span>
+            </div>
+          </div>
         )}
       </div>
     </div>
