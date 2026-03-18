@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for recognizing voice commands
@@ -23,7 +22,7 @@ export type VoiceCommandIntentInput = z.infer<
 
 const VoiceCommandIntentOutputSchema = z.object({
   intent: z
-    .enum(['police', 'ambulance', 'fire', 'security', 'medical', 'help', 'none'])
+    .enum(['police', 'ambulance', 'fire', 'security', 'medical', 'help', 'camera', 'journey', 'none'])
     .describe(
       'The recognized intent based on the voice command.'
     ),
@@ -32,7 +31,7 @@ const VoiceCommandIntentOutputSchema = z.object({
     .describe('A voice feedback message to be spoken back to the user.'),
   serviceDispatched: z
     .boolean()
-    .describe('True if an emergency service was dispatched, false otherwise.'),
+    .describe('True if an emergency service or key action was dispatched/triggered, false otherwise.'),
 });
 export type VoiceCommandIntentOutput = z.infer<
   typeof VoiceCommandIntentOutputSchema
@@ -51,9 +50,9 @@ const voiceCommandIntentPrompt = ai.definePrompt({
   prompt: `You are an AI assistant designed to interpret emergency voice commands for a safety app.
 
 The user will provide a voice command transcript. Your task is to:
-1. Identify the primary emergency service intent (police, ambulance, fire, security, medical, or general help).
+1. Identify the primary emergency service intent (police, ambulance, fire, security, medical, camera, journey or general help).
 2. Generate a concise and reassuring voice feedback message.
-3. Set 'serviceDispatched' to true if an emergency service is clearly requested.
+3. Set 'serviceDispatched' to true if an emergency service or specific protection feature is clearly requested.
 
 Recognized command patterns:
 - "Send Police" -> police
@@ -62,10 +61,14 @@ Recognized command patterns:
 - "Send Security" -> security
 - "Send Medical" -> medical
 - "Help Me" -> help
+- "Open Camera" -> camera
+- "Journey with me" -> journey
 
 Feedback Examples:
 - "Police dispatched • Family notified • Help is coming"
 - "Ambulance en route • Medical team alerted • Help is coming"
+- "Activating journey protection • GPS lock engaged"
+- "Opening live camera feed • Recording initialized"
 
 Transcript: {{{transcript}}}
 

@@ -1,28 +1,28 @@
 {
   "placeholderImages": [
     {
-      "id": "limpopo-savanna",
-      "description": "Limpopo savanna at golden hour with sunset",
-      "imageUrl": "https://picsum.photos/seed/limpopo/1920/1080",
-      "imageHint": "savanna sunset"
+      "id": "limpopo-roadblock",
+      "description": "South African police roadblock in Limpopo",
+      "imageUrl": "https://images.unsplash.com/photo-1581092919535-7146ff1d2f53",
+      "imageHint": "South African police roadblock"
     },
     {
       "id": "incident-preview-1",
-      "description": "CCTV footage of a road incident",
-      "imageUrl": "https://picsum.photos/seed/incident1/400/300",
-      "imageHint": "road accident"
+      "description": "CCTV-style road accident scene",
+      "imageUrl": "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16",
+      "imageHint": "car accident emergency"
     },
     {
       "id": "incident-preview-2",
-      "description": "Night time street security footage",
-      "imageUrl": "https://picsum.photos/seed/incident2/400/300",
-      "imageHint": "street night"
+      "description": "Police vehicle at night patrol",
+      "imageUrl": "https://images.unsplash.com/photo-1576765608866-5b51046452be",
+      "imageHint": "police car night"
     },
     {
       "id": "drone-view",
-      "description": "Aerial drone view of a highway",
-      "imageUrl": "https://picsum.photos/seed/drone/800/600",
-      "imageHint": "aerial highway"
+      "description": "Aerial view of vehicle crash scene",
+      "imageUrl": "https://images.unsplash.com/photo-1502877338535-766e1452684a",
+      "imageHint": "car crash aerial"
     }
   ]
 }

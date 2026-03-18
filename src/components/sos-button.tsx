@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, CheckCircle2, XCircle, Mic, Zap, Loader2, Waves, Volume2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Mic, Loader2, Waves, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, useDoc } from '@/firebase';
@@ -12,8 +11,10 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { voiceCommandIntent } from '@/ai/flows/voice-command-intent-flow';
 import { voiceAssistant } from '@/ai/flows/voice-assistant-flow';
+import { useRouter } from 'next/navigation';
 
 export const SOSButton = () => {
+  const router = useRouter();
   const [isHolding, setIsHolding] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking' | 'dispatched' | 'cancelled'>('idle');
@@ -32,7 +33,7 @@ export const SOSButton = () => {
   const HOLD_DURATION = 2000;
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
@@ -96,6 +97,13 @@ export const SOSButton = () => {
       const intentResult = await voiceCommandIntent({ transcript });
       
       if (intentResult.serviceDispatched) {
+        if (intentResult.intent === 'camera' || intentResult.intent === 'journey') {
+           setAiMessage(intentResult.feedbackMessage);
+           setTimeout(() => router.push('/journey'), 2000);
+           setStatus('idle');
+           return;
+        }
+
         handleDispatch(intentResult.intent, 0.9, [intentResult.intent]);
         setAiMessage(intentResult.feedbackMessage);
         return;
@@ -138,7 +146,7 @@ export const SOSButton = () => {
         status: "ACTIVE",
         priority: threatLevel > 0.85 ? "HIGH" : "MEDIUM",
         type: type,
-        location: { lat: -23.9045, lng: 29.4688 }, // Default Polokwane context
+        location: { lat: -23.9045, lng: 29.4688 },
         citizen: {
           uid: user?.uid || 'anonymous',
           name: profile?.name || 'Unknown Citizen'
@@ -211,31 +219,31 @@ export const SOSButton = () => {
   return (
     <div className="flex flex-col items-center gap-8 w-full">
       <div className="relative w-80 h-80 flex items-center justify-center">
-        {/* Ghost Light Pulse */}
+        {/* Lighter grayish glassmorphic container pulse */}
         <div className={cn(
-          "absolute inset-0 rounded-full transition-all duration-1000",
-          status === 'listening' ? "bg-accent/10 animate-pulse-glow" : "bg-primary/5"
+          "absolute inset-0 rounded-full transition-all duration-1000 bg-white/5 border border-white/10 backdrop-blur-xl",
+          status === 'listening' ? "bg-accent/10 border-accent/20 animate-pulse-glow shadow-[0_0_80px_rgba(173,232,66,0.2)]" : "shadow-[0_0_60px_rgba(255,255,255,0.05)]"
         )} />
 
-        <svg className="absolute w-full h-full -rotate-90">
+        <svg className="absolute w-full h-full -rotate-90 pointer-events-none">
           <circle
             cx="160"
             cy="160"
-            r="140"
+            r="142"
             fill="transparent"
             stroke="currentColor"
-            strokeWidth="12"
+            strokeWidth="8"
             className="text-white/5"
           />
           <motion.circle
             cx="160"
             cy="160"
-            r="140"
+            r="142"
             fill="transparent"
             stroke="currentColor"
-            strokeWidth="12"
-            strokeDasharray="880"
-            strokeDashoffset={880 - (880 * progress) / 100}
+            strokeWidth="8"
+            strokeDasharray="892"
+            strokeDashoffset={892 - (892 * progress) / 100}
             strokeLinecap="round"
             className={cn(
               "transition-colors duration-300",
@@ -257,41 +265,41 @@ export const SOSButton = () => {
           }}
           animate={status === 'idle' ? { scale: isHolding ? 0.92 : 1 } : { scale: 1 }}
           className={cn(
-            "relative w-64 h-64 rounded-full glass-card flex flex-col items-center justify-center gap-2 transition-all duration-500",
-            status === 'idle' && !isHolding && "bg-destructive/40 border-destructive text-destructive shadow-[0_0_60px_rgba(239,68,68,0.3)]",
-            isHolding && "bg-destructive/60 scale-95 ring-4 ring-destructive glow-accent",
-            status === 'listening' && "bg-accent/20 border-accent text-accent ring-4 ring-accent glow-accent scale-110",
-            status === 'processing' && "bg-accent/10 border-accent/40 animate-pulse",
-            status === 'speaking' && "bg-primary/20 border-primary text-primary ring-4 ring-primary glow-green",
-            status === 'dispatched' && "bg-primary/40 border-primary text-primary ring-8 ring-primary/20 glow-green",
+            "relative w-64 h-64 rounded-full flex flex-col items-center justify-center gap-3 transition-all duration-500",
+            "bg-white/10 border-2 border-white/20 backdrop-blur-3xl shadow-2xl",
+            status === 'idle' && !isHolding && "text-white/80 hover:bg-white/15",
+            isHolding && "bg-destructive/40 border-destructive text-white ring-4 ring-destructive/30",
+            status === 'listening' && "bg-accent/20 border-accent text-accent ring-4 ring-accent/30 scale-110",
+            status === 'processing' && "animate-pulse border-accent/50",
+            status === 'speaking' && "bg-primary/20 border-primary text-primary ring-4 ring-primary/30",
+            status === 'dispatched' && "bg-primary/40 border-primary text-primary ring-8 ring-primary/20",
             status === 'cancelled' && "ring-4 ring-destructive/40"
           )}
         >
           <AnimatePresence mode="wait">
             {(status === 'idle' || isHolding) && (
               <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
-                <div className="relative mb-2">
-                  <ShieldAlert className={cn("w-20 h-20 transition-colors", isHolding ? "text-white" : "text-destructive")} />
-                  <Mic className="absolute -bottom-1 -right-1 w-6 h-6 text-white/60 bg-black/40 rounded-full p-1" />
+                <span className="font-headline text-5xl font-bold tracking-tighter text-white drop-shadow-md">SOS</span>
+                <div className="mt-4 p-3 rounded-full bg-white/5 border border-white/10 text-white/60">
+                  <Mic className="w-8 h-8" />
                 </div>
-                <span className="font-headline text-4xl font-bold tracking-tighter text-white">SOS</span>
-                <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">
-                  {isHolding ? "HOLDING..." : "TAP TO TALK • HOLD"}
+                <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/40 mt-4">
+                  {isHolding ? "HOLDING..." : "TAP FOR AI • HOLD"}
                 </span>
               </motion.div>
             )}
 
             {status === 'listening' && (
               <motion.div key="listening" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center">
-                <Mic className="w-20 h-20 mb-2 text-accent animate-pulse" />
-                <span className="font-headline text-xl font-bold uppercase tracking-widest text-accent">Listening...</span>
+                <Mic className="w-16 h-16 mb-2 text-accent animate-pulse" />
+                <span className="font-headline text-xl font-bold uppercase tracking-widest text-accent">Listening</span>
               </motion.div>
             )}
 
             {status === 'processing' && (
               <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center">
-                <Loader2 className="w-20 h-20 mb-2 text-accent animate-spin" />
-                <span className="font-headline text-xl font-bold uppercase tracking-widest">Routing Intel...</span>
+                <Loader2 className="w-16 h-16 mb-2 text-accent animate-spin" />
+                <span className="font-headline text-xl font-bold uppercase tracking-widest text-accent">Analyzing</span>
               </motion.div>
             )}
 
@@ -306,14 +314,14 @@ export const SOSButton = () => {
               <motion.div key="dispatched" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-primary text-center px-4">
                 <CheckCircle2 className="w-24 h-24 mb-2" />
                 <span className="font-headline text-2xl font-bold uppercase tracking-tighter">SECURED</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Help is Coming</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Help Dispatched</span>
               </motion.div>
             )}
 
             {status === 'cancelled' && (
               <motion.div key="cancelled" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center text-destructive">
                 <XCircle className="w-24 h-24 mb-2" />
-                <span className="font-headline text-2xl font-bold uppercase tracking-tighter">STANDBY</span>
+                <span className="font-headline text-2xl font-bold uppercase tracking-tighter">CANCELLED</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -325,25 +333,25 @@ export const SOSButton = () => {
           <motion.div 
             initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            className="glass-card py-3 px-6 border-accent/20 max-w-sm"
+            className="glass-card py-3 px-6 border-accent/20 max-w-sm bg-white/5"
           >
             <p className="text-sm font-medium text-white/90 leading-relaxed italic">
               "{aiMessage}"
             </p>
           </motion.div>
         ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-primary font-bold tracking-widest text-xs uppercase flex items-center justify-center gap-3">
-              <span className="relative flex h-3 w-3">
+          <div className="flex flex-col gap-3">
+            <p className="text-primary/60 font-bold tracking-widest text-[10px] uppercase flex items-center justify-center gap-3">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Provincial Intelligence Active
+              Provincial Safety Intelligence Active
             </p>
-            <div className="flex gap-2 justify-center opacity-60">
-               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Police</span>
-               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Medical</span>
-               <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded border border-white/10">Fire</span>
+            <div className="flex gap-2 justify-center opacity-40">
+               <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-white/10">Police</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-white/10">Ambulance</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded border border-white/10">Camera</span>
             </div>
           </div>
         )}
