@@ -1,14 +1,14 @@
-
 "use client";
 
 import React from 'react';
 import { Navigation } from '@/components/navigation';
 import { GlassCard } from '@/components/glass-card';
-import { AlertTriangle, MapPin, Clock, Play, User, ShieldCheck, Loader2 } from 'lucide-react';
+import { MapPin, Clock, User, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AlertsPage() {
   const db = useFirestore();
@@ -26,20 +26,20 @@ export default function AlertsPage() {
       distance: '1.2km',
       time: 'Just now',
       description: 'AI Command detected suspicious activity near Polokwane North. Rapid response unit dispatched.',
-      image: 'https://picsum.photos/seed/acc1/600/400',
+      image: PlaceHolderImages[0].imageUrl,
       severity: 'CRITICAL',
       status: 'ACTIVE'
     }
   ];
 
   const allAlerts = realIncidents.length > 0 
-    ? realIncidents.map(inc => ({
+    ? realIncidents.map((inc, i) => ({
         id: inc.id,
         type: inc.type ? `${inc.type.toUpperCase()} ALERT` : 'EMERGENCY DISPATCH',
         distance: 'Local Context',
         time: inc.createdAt ? new Date(inc.createdAt.seconds * 1000).toLocaleTimeString() : 'Processing...',
         description: `Source: ${inc.metadata?.source || 'Guardian'}. Threat: ${inc.ai?.threatLevel ? (inc.ai.threatLevel * 100).toFixed(0) + '%' : 'High'}. Status: ${inc.status || 'Active'}`,
-        image: inc.media?.videoUrl || `https://picsum.photos/seed/${inc.id}/600/400`,
+        image: inc.media?.videoUrl || PlaceHolderImages[i % PlaceHolderImages.length].imageUrl,
         severity: inc.priority || 'MEDIUM',
         status: inc.status,
         citizen: inc.citizen?.name || 'Protected Citizen'

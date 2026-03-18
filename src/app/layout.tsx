@@ -1,8 +1,8 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export const metadata: Metadata = {
   title: 'Provincial Intelligent Safety | Limpopo Guardian',
@@ -25,8 +25,8 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <div 
             className="limpopo-bg" 
-            style={{ backgroundImage: 'url(https://picsum.photos/seed/limpopo/1920/1080)' }}
-            data-ai-hint="savanna sunset"
+            style={{ backgroundImage: `url(${PlaceHolderImages[4].imageUrl})` }}
+            data-ai-hint={PlaceHolderImages[4].imageHint}
           />
           {children}
           <Toaster />

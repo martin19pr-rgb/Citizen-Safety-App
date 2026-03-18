@@ -6,6 +6,7 @@ import { DualCameraPreview } from '@/components/dual-camera-preview';
 import { GlassCard } from '@/components/glass-card';
 import { VoiceGuardian } from '@/components/voice-guardian';
 import { MapPin, Navigation as NavIcon, Eye, ShieldAlert, FastForward, Power, Timer, Activity } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function JourneyPage() {
   const [journeyStarted, setJourneyStarted] = useState(false);
@@ -40,7 +41,6 @@ export default function JourneyPage() {
   const handleEndJourney = () => {
     setJourneyStarted(false);
     setIsFinished(true);
-    // Logic to "Save to Cloud" would go here
   };
 
   return (
@@ -51,7 +51,7 @@ export default function JourneyPage() {
       <div className="fixed inset-0 z-0 opacity-40">
         <div 
           className="w-full h-full bg-cover bg-center grayscale contrast-125"
-          style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=2066&auto=format&fit=crop)' }}
+          style={{ backgroundImage: `url(${PlaceHolderImages[0].imageUrl})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
       </div>

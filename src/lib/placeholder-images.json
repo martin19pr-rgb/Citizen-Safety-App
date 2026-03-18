@@ -3,26 +3,32 @@
     {
       "id": "limpopo-roadblock",
       "description": "South African police roadblock in Limpopo",
-      "imageUrl": "https://images.unsplash.com/photo-1581092919535-7146ff1d2f53",
-      "imageHint": "South African police roadblock"
+      "imageUrl": "https://picsum.photos/seed/roadblock/800/600",
+      "imageHint": "police roadblock"
     },
     {
       "id": "incident-preview-1",
       "description": "CCTV-style road accident scene",
-      "imageUrl": "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16",
-      "imageHint": "car accident emergency"
+      "imageUrl": "https://picsum.photos/seed/accident1/600/400",
+      "imageHint": "car accident"
     },
     {
       "id": "incident-preview-2",
       "description": "Police vehicle at night patrol",
-      "imageUrl": "https://images.unsplash.com/photo-1576765608866-5b51046452be",
-      "imageHint": "police car night"
+      "imageUrl": "https://picsum.photos/seed/patrol1/600/400",
+      "imageHint": "police car"
     },
     {
       "id": "drone-view",
       "description": "Aerial view of vehicle crash scene",
-      "imageUrl": "https://images.unsplash.com/photo-1502877338535-766e1452684a",
-      "imageHint": "car crash aerial"
+      "imageUrl": "https://picsum.photos/seed/drone1/1200/800",
+      "imageHint": "aerial crash"
+    },
+    {
+      "id": "limpopo-bg",
+      "description": "Limpopo landscape sunset",
+      "imageUrl": "https://picsum.photos/seed/limpopo/1920/1080",
+      "imageHint": "savanna sunset"
     }
   ]
 }
